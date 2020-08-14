@@ -1,0 +1,77 @@
+buildscript {
+    repositories {
+        google()
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+        jcenter()
+    }
+
+    dependencies {
+        classpath Depends.gradle.android
+        classpath Depends.gradle.kotlin
+        classpath Depends.gradle.kotlinSerialization
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
+    }
+}
+
+def setupAndroidPlugin = { isCi, project ->
+    project.android {
+        compileSdkVersion Versions.manifest.compileSdk
+        buildToolsVersion Versions.manifest.buildTools
+
+        defaultConfig {
+            minSdkVersion Versions.manifest.minSdk
+            targetSdkVersion Versions.manifest.targetSdk
+        }
+
+        dexOptions {
+            preDexLibraries = !isCi
+        }
+
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
+        }
+    }
+}.curry(System.getenv('CI') == 'true')
+
+def setupKotlinAndroidPlugin = { project ->
+    project.android {
+        sourceSets {
+            main.java.srcDirs += 'src/main/kotlin'
+            test.java.srcDirs += 'src/test/kotlin'
+        }
+
+        kotlinOptions {
+            jvmTarget = JavaVersion.VERSION_1_8
+        }
+    }
+}
+
+subprojects {
+    project.plugins.whenPluginAdded {
+        switch (it.class.name) {
+            case 'com.android.build.gradle.AppPlugin':
+            case 'com.android.build.gradle.LibraryPlugin':
+                setupAndroidPlugin(project)
+                break
+            case 'org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper':
+                setupKotlinAndroidPlugin(project)
+                break
+            default:
+                break
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
