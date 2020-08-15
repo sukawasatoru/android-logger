@@ -1,5 +1,30 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply plugin: 'maven-publish'
+
+afterEvaluate {
+    publishing {
+        repositories {
+            maven {
+                name = 'GitHubPackages'
+                url = uri('https://maven.pkg.github.com/sukawasatoru/android-logger')
+                credentials {
+                    username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+                    password = project.findProperty("gpr.key") ?: System.getenv("TOKEN")
+                }
+            }
+        }
+
+        publications {
+            gpr(MavenPublication) {
+                from components.release
+                groupId = 'jp.tinyport'
+                artifactId = 'logger'
+                version = '0.1.0'
+            }
+        }
+    }
+}
 
 dependencies {
     implementation Depends.kotlin.stdlib

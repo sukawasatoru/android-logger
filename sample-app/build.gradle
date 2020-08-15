@@ -12,6 +12,6 @@ android {
 }
 
 dependencies {
-    implementation project(':logger')
+    implementation 'jp.tinyport:logger:0.1.0'
     implementation Depends.kotlin.stdlib
 }
